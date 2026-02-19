@@ -1,105 +1,53 @@
 ---
 name: security-audit
-description: Run a security audit on a project using semgrep and trivy, then aggregate and analyze findings. Use when the user asks to audit, scan, or check a project for security vulnerabilities, secrets, misconfigurations, or code issues. Triggers on requests like "run a security audit", "scan this project for vulnerabilities", "check for security issues", "find secrets in the codebase", or "security review".
+description: Run a security audit".
 ---
 
-# Security Audit
+# Security Auditn
 
-Run semgrep (SAST) and trivy (vuln/secret/misconfig) on a project, aggregate findings into a structured report with severity-based prioritization.
+Run security scanners on a project, aggregate findings into a structured report with severity-based prioritization.
+
+Available scanners are defined in the `references/` folder. Each reference file describes a scanner, how to verify/install it, how to run it, and how to interpret its output.
 
 ## Workflow
 
-1. **Verify tools** - Confirm `semgrep` and `trivy` are installed
-2. **Run scans** - Execute `scripts/run_audit.sh <project-path> <output-dir>`
-3. **Read results** - Parse the JSON outputs
-4. **Produce report** - Aggregate findings into the report format below
+1. **Discover scanners** - Read all files in `<skill-path>/references/` to identify available scanners
+2. **Run scanners in parallel** - Launch one subagent per scanner to verify, execute, and collect results
+3. **Aggregate results** - Read all JSON outputs and produce a unified report
 
-## Step 1: Verify Tools
+## Step 1: Discover Scanners
 
-Check that both tools are available:
+Read every `.md` file in `<skill-path>/references/`. Each file defines one scanner with its verification command, scan script, output files, and report guidelines.
 
-```bash
-semgrep --version
-trivy --version
-```
+## Step 2: Run Scanners in Parallel
 
-If missing, tell the user how to install:
-- semgrep: `brew install semgrep` or `pip install semgrep`
-- trivy: `brew install trivy`
+For **each** scanner discovered in Step 1, launch a **separate subagent** (using the Task tool) that:
 
-Do NOT proceed until both are available.
+1. Verifies the scanner is installed (using the verification command from its reference file)
+2. If missing, reports the installation instructions and stops
+3. Runs the scan script described in the reference file
+4. Confirms the output files were created
 
-## Step 2: Run Scans
+All scanner subagents **must** run in parallel to minimize total scan time.
 
-Execute the bundled scan script. It runs both tools and writes JSON output:
+Use `/tmp/security-audit` as the output directory for all scanners.
 
-```bash
-bash <skill-path>/scripts/run_audit.sh <project-path> /tmp/security-audit
-```
+## Step 3: Aggregate Results and Produce Report
 
-This runs:
-- `semgrep ci --json` for static analysis
-- `trivy fs --scanners vuln,secret,misconfig --severity HIGH,CRITICAL --format json` for vulnerabilities, secrets, and misconfigurations
+Once all subagents complete, read the JSON output files from `/tmp/security-audit/` and produce a unified report.
 
-If `semgrep ci` fails due to missing CI config, fall back to:
-```bash
-semgrep scan --json --output /tmp/security-audit/semgrep.json <project-path>
-```
+Also check any `*_stderr.log` files if results look incomplete.
 
-## Step 3: Read Results
+### Report Format
 
-Read the JSON files:
-- `/tmp/security-audit/semgrep.json` - semgrep findings
-- `/tmp/security-audit/trivy.json` - trivy findings
+Use the template in `<skill-path>/assets/reporting-template.md` as the base structure for the report.
 
-Also check stderr logs if results look incomplete:
-- `/tmp/security-audit/semgrep_stderr.log`
-- `/tmp/security-audit/trivy_stderr.log`
+### Reporting Guidelines
 
-## Step 4: Produce Report
-
-Aggregate all findings into this format:
-
-```
-# Security Audit Report
-
-**Project:** <path>
-**Date:** <date>
-**Tools:** semgrep <version>, trivy <version>
-
-## Summary
-
-| Severity | Semgrep | Trivy Vulns | Trivy Secrets | Trivy Misconfig | Total |
-|----------|---------|-------------|---------------|-----------------|-------|
-| CRITICAL |   X     |     X       |      X        |       X         |   X   |
-| HIGH     |   X     |     X       |      X        |       X         |   X   |
-
-## Critical Findings
-
-### [Finding title from tool output]
-- **Source:** semgrep|trivy
-- **Severity:** CRITICAL
-- **File:** path/to/file:line
-- **Rule/CVE:** rule-id or CVE-ID
-- **Description:** what was found
-- **Recommendation:** how to fix
-
-(repeat for each critical finding)
-
-## High Findings
-
-(same format as critical)
-
-## Next Steps
-
-Prioritized list of remediation actions based on findings.
-```
-
-**Reporting guidelines:**
 - Group by severity (CRITICAL first, then HIGH)
-- Within each severity, group by tool (semgrep findings, then trivy)
-- Deduplicate findings that appear in both tools
-- For trivy vulns, include the affected package and fixed version when available
-- For semgrep, include the rule ID and link to rule documentation if available
+- Within each severity, group by scanner
+- Deduplicate findings that appear in multiple scanners
+- Follow scanner-specific report guidelines from the reference files
 - Keep descriptions concise - one line per finding unless context is essential
 - If no findings at a severity level, state "No [severity] findings" instead of omitting the section
+- **After presenting the final report**, use the `AskUserQuestion` tool to propose the user fixes for the critical/high findings, and ask if they want proposal for all findings or just the critical/high ones.
