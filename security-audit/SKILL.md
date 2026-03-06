@@ -19,7 +19,7 @@ Available scanners are defined in the `references/` folder. Each reference file 
 
 ## Step 1: Discover Scanners
 
-Read every `.md` file in `<skill-path>/references/`. Each file defines one scanner with its verification command, scan script, output files, and report guidelines.
+Access the `references/scan.md` file and read its contents to identify the scanners to perform.
 
 ## Step 2: Load Baseline
 
