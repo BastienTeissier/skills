@@ -1,6 +1,6 @@
 ---
 name: dependencies-management-audit
-description: Audit dependency-management practices in repositories that use npm, pnpm, Yarn, Bun, or uv. Use when you need to review package installation hardening, lockfile integrity, deterministic installs, dependency update automation, `.env` secret handling, dev-container isolation, publishing controls, provenance or OIDC setup, or overall supply-chain hygiene.
+description: Audit dependency-management practices in repositories that use npm, pnpm, Yarn, Bun, uv, pip, or Poetry. Use when you need to review package installation hardening, lockfile integrity, deterministic installs, dependency update automation, `.env` secret handling, dev-container isolation, publishing controls, provenance or OIDC setup, or overall supply-chain hygiene.
 ---
 
 # Dependencies Management Audit
@@ -19,12 +19,16 @@ Identify which package manager(s) the repository uses by checking the following 
    - `yarn.lock` → **yarn**
    - `bun.lock` or `bun.lockb` → **bun**
    - `uv.lock` → **uv**
+   - `poetry.lock` → **poetry**
+   - `requirements.txt` or `requirements/*.txt` → **pip**
 2. **Config files** in the repository root:
    - `.npmrc` → **npm**
    - `pnpm-workspace.yaml` → **pnpm**
    - `.yarnrc.yml` → **yarn**
    - `bunfig.toml` → **bun**
    - `uv.toml` or `[tool.uv]` in `pyproject.toml` → **uv**
+   - `poetry.toml` or `[tool.poetry]` in `pyproject.toml` → **poetry**
+   - `setup.py`, `setup.cfg`, or `.pip.conf` → **pip**
 3. **`packageManager` field** in the root `package.json` (e.g. `"pnpm@9.1.0"` → **pnpm**)
 
 If multiple package managers coexist, call out the operational risk and audit each active one separately.
@@ -40,14 +44,17 @@ For each detected package manager, read its reference file:
 - Yarn → `references/yarn.md`
 - Bun → `references/bun.md`
 - uv → `references/uv.md`
+- pip → `references/pip.md`
+- Poetry → `references/poetry.md`
 
 ## Step 3: Collect Evidence
 
 Open the highest-signal files directly before writing findings:
 
 - Root and workspace `package.json` files
+- `requirements.txt`, `requirements/*.txt`, `setup.py`, `setup.cfg`
 - Lockfiles
-- Package manager config files (`.npmrc`, `pnpm-workspace.yaml`, `.yarnrc.yml`, `bunfig.toml`, `uv.toml`, `pyproject.toml`)
+- Package manager config files (`.npmrc`, `pnpm-workspace.yaml`, `.yarnrc.yml`, `bunfig.toml`, `uv.toml`, `poetry.toml`, `.pip.conf`, `pyproject.toml`)
 - CI workflows (`.github/workflows/*`, `.gitlab-ci.yml`, release pipelines)
 - `.env*` files, `.devcontainer/*`, Dockerfiles
 - Dependency bot configs (Dependabot, Renovate, Snyk)

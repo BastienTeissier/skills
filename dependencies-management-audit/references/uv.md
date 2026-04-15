@@ -193,6 +193,7 @@ Pass when:
 - The dependency footprint is justified
 - Dev/test dependencies are properly separated in optional groups
 - No unnecessary heavy dependencies when lighter alternatives exist
+- SBOM generation is considered for supply chain visibility (e.g. `cyclonedx-py`)
 
 Fail signals:
 - Bloated dependencies with obvious lighter alternatives
@@ -207,7 +208,7 @@ Scope: dependency intake process
 Inspect: contributor docs, issue or PR templates, team process notes
 
 Pass when:
-- The team checks package health signals before adopting new dependencies (maintenance status, download counts, known vulnerabilities)
+- The team checks package health signals before adopting new dependencies (maintenance status, download counts, known vulnerabilities, vulnerability databases)
 
 Fail signals:
 - No evidence that new packages are reviewed before adoption
@@ -227,6 +228,56 @@ Fail signals:
 - Package review relies only on PyPI metadata or GitHub source view
 
 Default severity: Low to Medium
+
+### 14. Prefer binary wheel installations
+
+Scope: repo and CI
+
+Inspect: CI workflows, Dockerfiles, `uv.toml`, `pyproject.toml`
+
+Pass when:
+- `--no-build` or `--only-binary :all:` is used in CI and production installs to avoid executing arbitrary `setup.py` code from source distributions
+- Exceptions for packages that genuinely require source builds are documented
+
+Fail signals:
+- Source distributions are built without review in CI or production
+- Packages with native extensions are compiled from sdist without justification
+
+Default severity: High
+
+### 15. Scan for known vulnerabilities
+
+Scope: repo and CI
+
+Inspect: CI workflows, pre-commit config
+
+Pass when:
+- `pip-audit` or `uv-secure` runs in CI to detect known vulnerabilities in installed packages
+
+Fail signals:
+- No automated vulnerability scanning in CI
+- Known vulnerable packages present in `uv.lock`
+
+Default severity: Medium
+
+### 16. Secure CI/CD release pipelines
+
+Scope: maintainer CI
+
+Inspect: release workflows, GitHub Actions configs
+
+Pass when:
+- GitHub Actions are pinned by commit SHA (not tags)
+- `GITHUB_TOKEN` permissions are minimally scoped
+- Workflow hardening is validated with `zizmor` or equivalent linter
+- Release jobs use isolated runners or environments
+
+Fail signals:
+- Actions pinned by mutable tag (e.g. `@v3` instead of `@sha256:...`)
+- Overly broad `GITHUB_TOKEN` permissions
+- No workflow security linting
+
+Default severity: Medium
 
 ## Evidence Tips
 
