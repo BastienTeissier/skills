@@ -36,6 +36,22 @@ python manage.py inspect_access_control --ci --snapshot <snapshot.json> --output
 
 - `<output-dir>/django-access-inspector.json` - JSON findings with authenticated, unauthenticated, unchecked, and admin endpoints
 
+## Parse Output
+
+Run the bundled parse script to extract endpoint security data:
+
+```bash
+bash <skill-path>/scripts/parse_django_access_inspector.sh <output-dir>/django-access-inspector.json
+```
+
+Requires: `jq`
+
+Output sections:
+- `=== DJANGO ACCESS INSPECTOR SUMMARY ===` — counts of authenticated, unauthenticated, unchecked, admin endpoints
+- `=== ALLOW_ANY ENDPOINTS ===` — DRF endpoints using `AllowAny` permission (security risk)
+- `=== UNAUTHENTICATED ENDPOINTS ===` — endpoints with no authentication at all
+- `=== UNCHECKED VIEWS ===` — views where authentication could not be determined
+
 ## Report Guidelines
 
 After collecting the JSON output, perform the following analysis:

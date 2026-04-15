@@ -18,18 +18,30 @@ mkdir -p "$OUTPUT_DIR"
 
 echo ">>> Running semgrep..."
 
-if ! command -v semgrep &>/dev/null; then
-    echo "ERROR: semgrep not found. Install with: brew install semgrep  OR  pip install semgrep"
-    exit 1
-fi
-
-if semgrep ci --json --output "$OUTPUT_DIR/semgrep.json" \
-    --no-suppress-errors 2>"$OUTPUT_DIR/semgrep_stderr.log"; then
-    echo "    semgrep completed (exit 0)"
+if command -v semgrep &>/dev/null; then
+    if semgrep ci --json --output "$OUTPUT_DIR/semgrep.json" \
+        --no-suppress-errors 2>"$OUTPUT_DIR/semgrep_stderr.log"; then
+        echo "    semgrep completed (exit 0)"
+    else
+        SEMGREP_EXIT=$?
+        echo "    semgrep exited with code $SEMGREP_EXIT (results may still be usable)"
+        # semgrep ci exits non-zero when findings exist; the JSON is still valid
+    fi
+elif command -v docker &>/dev/null; then
+    echo "    semgrep CLI not found, falling back to docker (returntocorp/semgrep)..."
+    if docker run --rm -v "$PROJECT_PATH:/src" -v "$OUTPUT_DIR:/out" \
+        returntocorp/semgrep semgrep ci --json --output /out/semgrep.json \
+        --no-suppress-errors 2>"$OUTPUT_DIR/semgrep_stderr.log"; then
+        echo "    semgrep (docker) completed (exit 0)"
+    else
+        SEMGREP_EXIT=$?
+        echo "    semgrep (docker) exited with code $SEMGREP_EXIT (results may still be usable)"
+    fi
 else
-    SEMGREP_EXIT=$?
-    echo "    semgrep exited with code $SEMGREP_EXIT (results may still be usable)"
-    # semgrep ci exits non-zero when findings exist; the JSON is still valid
+    echo "ERROR: semgrep not found and docker is not available."
+    echo "Install semgrep: brew install semgrep  OR  pip install semgrep"
+    echo "Or install docker: https://docs.docker.com/get-docker/"
+    exit 1
 fi
 
 echo "Results in: $OUTPUT_DIR"

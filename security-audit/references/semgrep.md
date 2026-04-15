@@ -37,6 +37,22 @@ semgrep scan --json --output <output-dir>/semgrep.json <project-path>
 - `<output-dir>/semgrep.json` - JSON findings
 - `<output-dir>/semgrep_stderr.log` - stderr for diagnostics
 
+## Parse Output
+
+Run the bundled parse script to extract a summary and CRITICAL/HIGH findings:
+
+```bash
+bash <skill-path>/scripts/parse_semgrep.sh <output-dir>/semgrep.json
+```
+
+Requires: `jq`
+
+Severity mapping: `ERROR` → `HIGH`, `WARNING` → `MEDIUM`, `INFO` → `LOW`
+
+Output sections:
+- `=== SEMGREP SUMMARY ===` — total count, breakdown by normalized severity
+- `=== CRITICAL/HIGH FINDINGS ===` — one JSON object per line with rule, CVE, CWE, OWASP metadata
+
 ## Report Guidelines
 
 - Include the rule ID and link to rule documentation if available

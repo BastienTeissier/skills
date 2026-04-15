@@ -18,21 +18,34 @@ mkdir -p "$OUTPUT_DIR"
 
 echo ">>> Running trivy..."
 
-if ! command -v trivy &>/dev/null; then
-    echo "ERROR: trivy not found. Install with: brew install trivy"
-    exit 1
-fi
-
-if trivy fs \
-    --scanners vuln,secret,misconfig \
-    --severity HIGH,CRITICAL \
-    --format json \
-    --output "$OUTPUT_DIR/trivy.json" \
-    "$PROJECT_PATH" 2>"$OUTPUT_DIR/trivy_stderr.log"; then
-    echo "    trivy completed (exit 0)"
+if command -v trivy &>/dev/null; then
+    if trivy fs \
+        --scanners vuln,secret,misconfig \
+        --severity HIGH,CRITICAL \
+        --format json \
+        --output "$OUTPUT_DIR/trivy.json" \
+        "$PROJECT_PATH" 2>"$OUTPUT_DIR/trivy_stderr.log"; then
+        echo "    trivy completed (exit 0)"
+    else
+        TRIVY_EXIT=$?
+        echo "    trivy exited with code $TRIVY_EXIT"
+    fi
+elif command -v docker &>/dev/null; then
+    echo "    trivy CLI not found, falling back to docker (aquasec/trivy)..."
+    if docker run --rm -v "$PROJECT_PATH:/src" -v "$OUTPUT_DIR:/out" \
+        aquasec/trivy fs --scanners vuln,secret,misconfig \
+        --severity HIGH,CRITICAL --format json --output /out/trivy.json \
+        /src 2>"$OUTPUT_DIR/trivy_stderr.log"; then
+        echo "    trivy (docker) completed (exit 0)"
+    else
+        TRIVY_EXIT=$?
+        echo "    trivy (docker) exited with code $TRIVY_EXIT"
+    fi
 else
-    TRIVY_EXIT=$?
-    echo "    trivy exited with code $TRIVY_EXIT"
+    echo "ERROR: trivy not found and docker is not available."
+    echo "Install trivy: brew install trivy"
+    echo "Or install docker: https://docs.docker.com/get-docker/"
+    exit 1
 fi
 
 echo "Results in: $OUTPUT_DIR"
