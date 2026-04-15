@@ -46,7 +46,15 @@ Use `/tmp/security-audit` as the output directory for all scanners.
 
 ## Step 4: Aggregate Results and Produce Report
 
-Once all subagents complete, read the JSON output files from `/tmp/security-audit/` and produce a unified report.
+Once all subagents complete, use the **parse scripts** to extract structured findings from each scanner's JSON output:
+
+```bash
+bash <skill-path>/scripts/parse_trivy.sh /tmp/security-audit/trivy.json
+bash <skill-path>/scripts/parse_semgrep.sh /tmp/security-audit/semgrep.json
+bash <skill-path>/scripts/parse_django_access_inspector.sh /tmp/security-audit/django-access-inspector.json
+```
+
+These scripts require `jq` and output a summary section followed by CRITICAL/HIGH findings as JSON lines. See each scanner's reference file for output format details.
 
 Also check any `*_stderr.log` files if results look incomplete.
 

@@ -31,6 +31,20 @@ This runs `trivy fs --scanners vuln,secret,misconfig --severity HIGH,CRITICAL --
 - `<output-dir>/trivy.json` - JSON findings
 - `<output-dir>/trivy_stderr.log` - stderr for diagnostics
 
+## Parse Output
+
+Run the bundled parse script to extract a summary and CRITICAL/HIGH findings:
+
+```bash
+bash <skill-path>/scripts/parse_trivy.sh <output-dir>/trivy.json
+```
+
+Requires: `jq`
+
+Output sections:
+- `=== TRIVY SUMMARY ===` — total count, breakdown by severity and type
+- `=== CRITICAL/HIGH FINDINGS ===` — one JSON object per line for each CRITICAL/HIGH finding
+
 ## Report Guidelines
 
 - Include the affected package and fixed version when available
