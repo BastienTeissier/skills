@@ -6,7 +6,7 @@ Reads the Committed Inventory that the all-access-inspector skill keeps in `tool
 
 ## Installation
 
-Nothing to install for the audit itself; the parse script needs `jq` (`brew install jq`).
+The parse script needs `jq` (`brew install jq`, `apt-get install jq`). The staleness check runs with the project's own toolchain (e.g. `uv` and its installed dependencies); without it, staleness is reported as not checked.
 
 A project without an inventory is fitted once with the all-access-inspector skill, which commits `tools/access-inspector/`.
 
@@ -16,13 +16,15 @@ A project without an inventory is fitted once with the all-access-inspector skil
 find <project-path> -path '*/tools/access-inspector/inventory.json' -not -path '*/node_modules/*' -not -path '*/.venv/*'
 ```
 
-No result: report "No Committed Inventory: fit the project with the all-access-inspector skill first" and stop this scanner. Do not try to boot the application or run another access scanner instead.
+Only `tools/access-inspector/inventory.json` counts; another `inventory.json` (a test oracle, an export) is not a Committed Inventory.
 
-Several results: each is one application. Run the steps below once per inventory and report one section per application.
+No result: write "No Committed Inventory: fit the project with the all-access-inspector skill first" as this scanner's section of the report, list the scanner as "not run" in **Scanners used**, and stop this scanner: the steps below need an inventory. Do not try to boot the application or run another access scanner instead.
+
+Several results: each is one application. `<app>` is the directory holding `tools/`, i.e. the inventory path minus `tools/access-inspector/inventory.json`. Run the steps below once per inventory and report one section per application.
 
 ## Scan: staleness check only
 
-The inventory is committed; the only thing to run is its check, to learn whether the code has moved since. From the directory that holds `tools/` (for Django, the one with `manage.py`), run the check step of `tools/access-inspector/ci-snippet.*` with the project's own runner, e.g.:
+The inventory is committed; the only thing to run is its check, to learn whether the code has moved since. From `<app>` (for Django, the directory with `manage.py`), run the check step of `tools/access-inspector/ci-snippet.*` with the project's own runner. Without a snippet, run `python tools/access-inspector/inspect.py --check` through the runner the project uses (`uv run`, `poetry run`, an activated venv), e.g.:
 
 ```bash
 uv run python tools/access-inspector/inspect.py --check
@@ -36,7 +38,7 @@ Never run `inspect.py` without `--check`, and never edit `inventory.json`.
 
 ## Output
 
-- `<output-dir>/access-inspector.txt` - one line per inventory: `<path to inventory.json> <current|stale|not checked>`, then the `--check` diff of any stale one
+- `<output-dir>/access-inspector.txt` - one line per inventory, `<current|stale|not checked><TAB><absolute path to inventory.json>`, then the `--check` output of any stale one; not written when Verification found no inventory
 
 ## Parse Output
 
@@ -73,6 +75,12 @@ For each endpoint in ANONYMOUS, OPTIONAL WITHOUT RULE and UNKNOWN (unexplained),
 - UNKNOWN (unexplained): a gap in the inventory, always reported. When the section is empty, write "No unexplained endpoints".
 - ACKNOWLEDGED UNKNOWN: quote the reason. It is not a finding unless reading the handler contradicts the reason.
 - Remember the layer: `framework-default` means no check was declared at all.
+
+### Map to the report template
+
+- Each endpoint you classify critical or high is a finding in the template's Critical or High section: **Source** Access Inspector, **File** the handler, **Rule/CVE** `access-inspector:<anonymous|optional-without-rule|unknown>`, the method and path in the title.
+- Medium and low endpoints go in a table in the application's section (method, path, handler, risk, one-line reason), not in the severity sections.
+- The Summary table's Access Inspector column counts the critical and high ones.
 
 ### Generate advice
 
