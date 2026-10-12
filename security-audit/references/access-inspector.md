@@ -18,9 +18,9 @@ find <project-path> -path '*/tools/access-inspector/inventory.json' -not -path '
 
 Only `tools/access-inspector/inventory.json` counts; another `inventory.json` (a test oracle, an export) is not a Committed Inventory.
 
-No result: write "No Committed Inventory: fit the project with the all-access-inspector skill first" as this scanner's section of the report, list the scanner as "not run" in **Scanners used**, and stop this scanner: the steps below need an inventory. Do not try to boot the application or run another access scanner instead.
+No result: write "No Committed Inventory: fit the project with the all-access-inspector skill first" as this scanner's section of the report, name it under **Scanners used** as "Access Inspector (not run: no inventory)", and stop this scanner: the steps below need an inventory. Do not try to boot the application or run another access scanner instead.
 
-Several results: each is one application. `<app>` is the directory holding `tools/`, i.e. the inventory path minus `tools/access-inspector/inventory.json`. Run the steps below once per inventory and report one section per application.
+Several results: each is one application. `<app>` is the directory holding `tools/`, i.e. the inventory path minus `tools/access-inspector/inventory.json` (`.` when that leaves nothing). Run the steps below once per inventory and report one section per application.
 
 ## Scan: staleness check only
 
@@ -31,14 +31,14 @@ uv run python tools/access-inspector/inspect.py --check
 ```
 
 - Exit 0: the inventory is current.
-- Exit 1: the inventory is **stale**. Keep its per-endpoint diff, and proceed on the committed facts.
-- Exit 2, or the project cannot run here (dependencies not installed, services missing): staleness is **not checked**. Proceed on the committed facts.
+- Exit 1 with the per-endpoint diff and "differs from the endpoints this code serves": the inventory is **stale**. Keep its per-endpoint diff, and proceed on the committed facts.
+- Exit 2, any other failure (a runner or import error also exits non-zero), or the project cannot run here (dependencies not installed, services missing): staleness is **not checked**. Proceed on the committed facts.
 
 Never run `inspect.py` without `--check`, and never edit `inventory.json`.
 
 ## Output
 
-- `<output-dir>/access-inspector.txt` - one line per inventory, `<current|stale|not checked><TAB><absolute path to inventory.json>`, then the `--check` output of any stale one; not written when Verification found no inventory
+- `<output-dir>/access-inspector.txt`, written by you after the scan - one line per inventory, `<current|stale|not checked><TAB><absolute path to inventory.json>`, then the `--check` output of any stale one; not written when Verification found no inventory
 
 ## Parse Output
 
@@ -65,20 +65,20 @@ Open each application's section with its inventory path, `discovery_mode` and `c
 
 ### Analyze the code
 
-For each endpoint in ANONYMOUS, OPTIONAL WITHOUT RULE and UNKNOWN (unexplained), read the handler (`handler` is `path:line` in the project, or the dotted name of framework code) and what it touches: models, serializers, outgoing calls.
+For each endpoint in every section, ACKNOWLEDGED UNKNOWN included, read the handler (`handler` is `path:line` in the project, or the dotted name of framework code) and what it touches: models, serializers, outgoing calls. When the check lives elsewhere, follow it: `authn_raw`/`authz_raw` name the decorator, permission class or project override (e.g. an `AdminSite` subclass), and `unknown_reason` may point at the URLconf. Group the rows of one path and handler (`GET`/`HEAD`/`OPTIONS`) into one endpoint.
 
 ### Interpret results
 
 - List ANONYMOUS first: mutating methods (`POST`, `PUT`, `PATCH`, `DELETE`, `ANY`) and API paths before reads.
 - Classify each endpoint's risk (critical, high, medium, low) from what the handler exposes or changes, not from the classification alone: a login page or a health check is anonymous by design.
-- OPTIONAL WITHOUT RULE: check that the handler filters what it returns by `request.user` when there is one.
+- OPTIONAL WITHOUT RULE: unless the data is public, check that the handler filters what it returns by `request.user` when there is one.
 - UNKNOWN (unexplained): a gap in the inventory, always reported. When the section is empty, write "No unexplained endpoints".
 - ACKNOWLEDGED UNKNOWN: quote the reason. It is not a finding unless reading the handler contradicts the reason.
 - Remember the layer: `framework-default` means no check was declared at all.
 
 ### Map to the report template
 
-- Each endpoint you classify critical or high is a finding in the template's Critical or High section: **Source** Access Inspector, **File** the handler, **Rule/CVE** `access-inspector:<anonymous|optional-without-rule|unknown>`, the method and path in the title.
+- Each endpoint you classify critical or high is a finding in the template's Critical or High section: **Source** Access Inspector, **File** the handler, **Rule/CVE** `access-inspector:<anonymous|optional-without-rule|unknown>`, the method and path in the title. An acknowledged unknown whose handler contradicts its reason takes `access-inspector:unknown`.
 - Medium and low endpoints go in a table in the application's section (method, path, handler, risk, one-line reason), not in the severity sections.
 - The Summary table's Access Inspector column counts the critical and high ones.
 
