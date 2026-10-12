@@ -26,7 +26,7 @@ Several results: each is one application. `<app>` is the directory holding `tool
 
 The inventory is committed; the only thing to run is its check, to learn whether the code has moved since. The check boots the application: it imports the project's settings and URL configuration, so it executes the project's code. Ask the user before running it. When they decline, or the repository is not trusted (a fork, a third-party project), staleness is **not checked**.
 
-Never let the runner install anything (`uv run --no-sync`, no `uv sync`/`pip install` step). From `<app>` (for Django, the directory with `manage.py`), run the check step of `tools/access-inspector/ci-snippet.*` with the project's own runner. Without a snippet, run `python tools/access-inspector/inspect.py --check` through the runner the project uses (`uv run`, `poetry run`, an activated venv), e.g.:
+Never let the runner install anything (`uv run --no-sync`, no `uv sync`/`pip install` step). From `<app>` (for Django, the directory with `manage.py`), run the check step of `tools/access-inspector/ci-snippet.*` with the project's own runner. Without a snippet, run the Adapted Script's check entry point in `tools/access-inspector/` through the runner the project uses. For Django it is `python tools/access-inspector/inspect.py --check` (`uv run --no-sync`, `poetry run`, an activated venv), e.g.:
 
 ```bash
 uv run --no-sync python tools/access-inspector/inspect.py --check
