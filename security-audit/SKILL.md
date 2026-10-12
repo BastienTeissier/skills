@@ -51,7 +51,7 @@ Once all subagents complete, use the **parse scripts** to extract structured fin
 ```bash
 bash <skill-path>/scripts/parse_trivy.sh /tmp/security-audit/trivy.json
 bash <skill-path>/scripts/parse_semgrep.sh /tmp/security-audit/semgrep.json
-bash <skill-path>/scripts/parse_django_access_inspector.sh /tmp/security-audit/django-access-inspector.json
+bash <skill-path>/scripts/parse_access_inspector.sh <app>/tools/access-inspector/inventory.json  # once per Committed Inventory
 ```
 
 These scripts require `jq` and output a summary section followed by CRITICAL/HIGH findings as JSON lines. See each scanner's reference file for output format details.

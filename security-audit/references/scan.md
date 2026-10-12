@@ -1,2 +1,4 @@
 This is a placeholder, this file should list all scan that should be run (if you see this use the askUserQuestion tool to ask the user which scan they want to run, update this file and trigger the corresponding subagent for that scan)
 - [Link to the scan reference file (ex: scan1.md)]
+
+Available scan references: [semgrep.md](semgrep.md), [trivy.md](trivy.md), [access-inspector.md](access-inspector.md).
