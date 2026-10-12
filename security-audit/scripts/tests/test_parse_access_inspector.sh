@@ -5,6 +5,8 @@
 #
 # fixtures/django-demo-inventory.json is fixtures/django-demo/expected/inventory.json of the all-access-inspector
 # repository: a runtime, complete Django inventory with anonymous, optional and acknowledged unknown endpoints.
+# Nothing syncs the copy: when that golden file or the inventory schema changes, copy it again and update the
+# expected counts below.
 
 set -euo pipefail
 
