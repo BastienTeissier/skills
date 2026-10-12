@@ -40,6 +40,12 @@ expect "summary counts by authentication" \
   "$(grep '^By authentication:' <<<"$OUT")"
 expect "summary counts by authorization" \
   'By authorization: {"none":30,"rule":25,"unknown":20}' "$(grep '^By authorization:' <<<"$OUT")"
+expect "summary counts by authentication layer" \
+  'By authentication layer: {"null":2,"class":16,"framework-default":9,"global":39,"method":9}' \
+  "$(grep '^By authentication layer' <<<"$OUT")"
+expect "summary counts by authorization layer" \
+  'By authorization layer: {"null":2,"class":19,"framework-default":9,"global":28,"method":17}' \
+  "$(grep '^By authorization layer' <<<"$OUT")"
 expect "summary counts by Project Dimension" \
   'By access_tier: {"customer":16,"public":34,"staff":25}' "$(grep '^By access_tier' <<<"$OUT")"
 
