@@ -2,11 +2,11 @@
 
 ## Overview
 
-Reads the Committed Inventory that the all-access-inspector skill keeps in `tools/access-inspector/inventory.json`: every HTTP endpoint of an application with its authentication and authorization, on any stack. The audit starts from these committed facts. It never boots or runs the application, and never regenerates the inventory.
+Reads the Committed Inventory that the all-access-inspector skill keeps in `tools/access-inspector/inventory.json`: every HTTP endpoint of an application with its authentication and authorization, on any stack. The audit starts from these committed facts. It never regenerates the inventory, and boots the application only for the staleness check, once the user agrees.
 
 ## Installation
 
-The parse script needs `jq` (`brew install jq`, `apt-get install jq`). The staleness check runs with the project's own toolchain (e.g. `uv` and its installed dependencies); without it, staleness is reported as not checked.
+The parse script needs `jq` (`brew install jq`, `apt-get install jq`). The staleness check runs with the project's own toolchain, already installed (e.g. `uv` and a synced environment); without it, staleness is reported as not checked.
 
 A project without an inventory is fitted once with the all-access-inspector skill, which commits `tools/access-inspector/`.
 
@@ -24,15 +24,17 @@ Several results: each is one application. `<app>` is the directory holding `tool
 
 ## Scan: staleness check only
 
-The inventory is committed; the only thing to run is its check, to learn whether the code has moved since. From `<app>` (for Django, the directory with `manage.py`), run the check step of `tools/access-inspector/ci-snippet.*` with the project's own runner. Without a snippet, run `python tools/access-inspector/inspect.py --check` through the runner the project uses (`uv run`, `poetry run`, an activated venv), e.g.:
+The inventory is committed; the only thing to run is its check, to learn whether the code has moved since. The check boots the application: it imports the project's settings and URL configuration, so it executes the project's code. Ask the user before running it. When they decline, or the repository is not trusted (a fork, a third-party project), staleness is **not checked**.
+
+Never let the runner install anything (`uv run --no-sync`, no `uv sync`/`pip install` step). From `<app>` (for Django, the directory with `manage.py`), run the check step of `tools/access-inspector/ci-snippet.*` with the project's own runner. Without a snippet, run `python tools/access-inspector/inspect.py --check` through the runner the project uses (`uv run`, `poetry run`, an activated venv), e.g.:
 
 ```bash
-uv run python tools/access-inspector/inspect.py --check
+uv run --no-sync python tools/access-inspector/inspect.py --check
 ```
 
 - Exit 0: the inventory is current.
 - Exit 1 with the per-endpoint diff and "differs from the endpoints this code serves": the inventory is **stale**. Keep its per-endpoint diff, and proceed on the committed facts.
-- Exit 2, any other failure (a runner or import error also exits non-zero), or the project cannot run here (dependencies not installed, services missing): staleness is **not checked**. Proceed on the committed facts.
+- The user declined, exit 2, any other failure (a runner or import error also exits non-zero), or the project cannot run here (dependencies not installed, services missing): staleness is **not checked**. Proceed on the committed facts.
 
 Never run `inspect.py` without `--check`, and never edit `inventory.json`.
 
