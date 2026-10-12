@@ -18,9 +18,9 @@ find <project-path> -path '*/tools/access-inspector/inventory.json' -not -path '
 
 Only `tools/access-inspector/inventory.json` counts; another `inventory.json` (a test oracle, an export) is not a Committed Inventory.
 
-No result: write "No Committed Inventory: fit the project with the all-access-inspector skill first" as this scanner's section of the report, name it under **Scanners used** as "Access Inspector (not run: no inventory)", and stop this scanner: the steps below need an inventory. Do not try to boot the application or run another access scanner instead.
+No result: write "No Committed Inventory: fit the project with the all-access-inspector skill first" as the report's Access Inspector section, name it under **Scanners used** as "Access Inspector (not run: no inventory)", and stop this scanner: the steps below need an inventory. Do not try to boot the application or run another access scanner instead.
 
-Several results: each is one application. `<app>` is the directory holding `tools/`, i.e. the inventory path minus `tools/access-inspector/inventory.json` (`.` when that leaves nothing). Run the steps below once per inventory and report one section per application.
+Several results: each is one application. `<app>` is the directory holding `tools/`, i.e. the inventory path minus `tools/access-inspector/inventory.json` (`.` when that leaves nothing). Run the steps below once per inventory and report one subsection per application in the report's Access Inspector section.
 
 ## Scan: staleness check only
 
@@ -63,7 +63,7 @@ Output sections:
 
 ### State what the inventory covers
 
-Open each application's section with its inventory path, `discovery_mode` and `coverage`, so a `best-effort` inventory (static discovery, or an improvised stack) is never read as complete. On a stale inventory, put a warning banner first: "Inventory stale: the code changed since it was committed; findings below may miss or misplace endpoints", followed by the endpoints the `--check` diff names. On "not checked", say so in one line.
+In the report header, write one **Access Inspector** line per application: its inventory path, `discovery_mode`, `coverage` and staleness, so a `best-effort` inventory (static discovery, or an improvised stack) is never read as complete. On a stale inventory, open the application's subsection with a warning banner: "Inventory stale: the code changed since it was committed; findings below may miss or misplace endpoints", followed by the endpoints the `--check` diff names. On "not checked", say so in one line.
 
 ### Analyze the code
 
@@ -81,7 +81,7 @@ For each endpoint in every section, ACKNOWLEDGED UNKNOWN included, read the hand
 ### Map to the report template
 
 - Each endpoint you classify critical or high is a finding in the template's Critical or High section: **Source** Access Inspector, **File** the handler, **Rule/CVE** `access-inspector:<anonymous|optional-without-rule|unknown>`, the method and path in the title. An acknowledged unknown whose handler contradicts its reason takes `access-inspector:unknown`.
-- Medium and low endpoints go in a table in the application's section (method, path, handler, risk, one-line reason), not in the severity sections.
+- Medium and low endpoints go in a table in the application's subsection of the Access Inspector section (method, path, handler, risk, one-line reason), not in the severity sections.
 - The Summary table's Access Inspector column counts the critical and high ones.
 
 ### Generate advice
