@@ -50,8 +50,9 @@ expect "optional without rule lists the catalog" \
   "GET /catalog/products/;HEAD /catalog/products/;OPTIONS /catalog/products/" \
   "$(section "$OUT" "OPTIONAL WITHOUT RULE" | jq -r '"\(.method) \(.path)"' | paste -sd';' -)"
 expect "a complete inventory has no unexplained unknown" "" "$(section "$OUT" "UNKNOWN (unexplained)")"
-expect "acknowledged unknowns carry their reason" "20" \
-  "$(section "$OUT" "ACKNOWLEDGED UNKNOWN" | jq -r 'select(.unknown_reason != null) | .path' | wc -l | tr -d ' ')"
+expect "acknowledged unknowns are counted" "20" "$(section "$OUT" "ACKNOWLEDGED UNKNOWN" | wc -l | tr -d ' ')"
+expect "acknowledged unknowns carry their reason" "true" \
+  "$(section "$OUT" "ACKNOWLEDGED UNKNOWN" | jq -s 'all(.unknown_reason != null)')"
 
 # An unknown without a reason is unexplained, never acknowledged
 jq '(.endpoints[] | select(.path == "/graphql/")).unknown_reason = null' "$INVENTORY" >"$TMP/unexplained.json"
