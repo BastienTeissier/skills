@@ -79,5 +79,7 @@ expect "best-effort coverage shows its note" "Coverage: best-effort (routes read
 expect "no dimension line without Project Dimensions" "" "$(grep '^By access_tier' <<<"$OUT" || true)"
 
 expect "a missing inventory is an error" "1" "$(bash "$PARSE" "$TMP/none.json" >/dev/null 2>&1; echo $?)"
+jq '.schema_version = "2"' "$INVENTORY" >"$TMP/v2.json"
+expect "another schema version is an error" "1" "$(bash "$PARSE" "$TMP/v2.json" >/dev/null 2>&1; echo $?)"
 
 exit "$FAILED"

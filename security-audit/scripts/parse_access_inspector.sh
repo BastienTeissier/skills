@@ -22,6 +22,13 @@ if [ ! -f "$INPUT" ]; then
   exit 1
 fi
 
+# Field names below are those of schema version 1: a newer inventory must not parse into empty sections
+VERSION="$(jq -r '.schema_version' "$INPUT")"
+if [ "$VERSION" != "1" ]; then
+  echo "ERROR: inventory schema_version $VERSION is not supported, expected 1" >&2
+  exit 1
+fi
+
 # One compact line per endpoint, with the fields a finding needs
 ENDPOINT='{method, path, handler, authentication: .authentication.value, authorization: .authorization.value,
   authn_raw: .authentication.raw, authz_raw: .authorization.raw, dimensions, unknown_reason}'
