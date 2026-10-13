@@ -4,6 +4,7 @@
 **Date:** <date>
 **Scanners used:** <list of scanners that ran successfully>
 **Baseline file:** <path to baseline file, or "None">
+**Access Inspector:** <inventory path> — <discovery_mode>, <coverage>, <current|stale|not checked> (one line per application; omit when Access Inspector did not run)
 
 ## Baseline Status
 
@@ -45,6 +46,10 @@ These entries can be removed from the baseline.
 ## High Findings
 
 (same format as critical)
+
+## Access Inspector
+
+(only when Access Inspector ran; one subsection per application: stale banner, unexplained unknowns, medium and low endpoints)
 
 ## Next Steps
 
